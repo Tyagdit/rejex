@@ -14,12 +14,20 @@ const (
 
 type RejexBuilder struct {
     strings.Builder
+
     flags map[RejexFlag]bool
+
     negateNext bool
     lastSegmentType string
+
     groupActive bool
-    groupContent string
-    savedQuantifier string
+    groupContent []string
+    groupNestingLevel int
+
+    selectionActive bool
+    selectionContent string
+
+    // bufferedQuantifier string
 }
 
 func NewRejex() *RejexBuilder {
@@ -67,8 +75,10 @@ func (r *RejexBuilder) appendSegment(segmentType string, segment string, alt ...
         toWrite = alt[0]
     }
 
-    if r.groupActive {
-        r.groupContent += segment
+    if r.selectionActive {
+        r.selectionContent += segment
+    } else if r.groupActive {
+        r.groupContent[r.groupNestingLevel] += segment
     } else {
         r.WriteString(toWrite)
     }
@@ -83,7 +93,7 @@ func (r *RejexBuilder) Not() *RejexBuilder {
     return r
 }
 
-func (r *RejexBuilder) Exactly(s string) *RejexBuilder {
+func (r *RejexBuilder) Characters(s string) *RejexBuilder {
     return r.appendSegment(CHARACTERS, s)
 }
 
@@ -114,7 +124,7 @@ func (r *RejexBuilder) WordBoundary() *RejexBuilder {
 
 func checkForGroup(s, q string) string {
     if len(s) > 1 {
-        return fmt.Sprintf("(%s)%s", s, q)
+        return fmt.Sprintf("(?:%s)%s", s, q)
     } else {
         return fmt.Sprintf("%s%s", s, q)
     }
@@ -177,28 +187,62 @@ func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
 
 // Grouping
 
-func (r *RejexBuilder) StartCaptureGroup() *RejexBuilder {
-    r.groupActive = true
-    r.groupContent = "("
+func (r *RejexBuilder) startNewGroup(s string) *RejexBuilder {
+    if !r.selectionActive {
+        r.groupActive = true
+        r.groupNestingLevel++
+        r.groupContent[r.groupNestingLevel] = s
+    }
     return r
 }
 
-func (r *RejexBuilder) StartNamedCaptureGroup(name string) *RejexBuilder {
-    r.groupActive = true
-    r.groupContent = fmt.Sprintf("(?P<%s>", name)
-    return r
+func (r *RejexBuilder) BeginCaptureGroup() *RejexBuilder {
+    return r.startNewGroup("(")
 }
 
-func (r *RejexBuilder) StartNonCaptureGroup() *RejexBuilder {
-    r.groupActive = true
-    r.groupContent = "(?:"
-    return r
+func (r *RejexBuilder) BeginNamedCaptureGroup(name string) *RejexBuilder {
+    segment := fmt.Sprintf("(?P<%s>", name)
+    return r.startNewGroup(segment)
 }
 
-func (r *RejexBuilder) StopGroup() *RejexBuilder {
+func (r *RejexBuilder) BeginNonCaptureGroup() *RejexBuilder {
+    return r.startNewGroup("(?:")
+}
+
+func (r *RejexBuilder) BeginGroupWithFlags(f []RejexFlag) *RejexBuilder {
+    segment := fmt.Sprintf("(?%s:", string(f))
+    return r.startNewGroup(segment)
+}
+
+func (r *RejexBuilder) EndGroup() *RejexBuilder {
     if r.groupActive {
-        r.groupActive = false
-        r.appendSegment(CHARACTERS, r.groupContent + ")")
+        segment := r.groupContent[r.groupNestingLevel] + ")"
+        r.groupNestingLevel--
+        if r.groupNestingLevel == 0 {
+            r.groupActive = false
+        }
+        r.appendSegment(CHARACTERS, segment)
+    }
+    return r
+}
+
+func (r *RejexBuilder) BeginSelectionSet() *RejexBuilder {
+    r.selectionActive = true
+    r.selectionContent = "["
+    return r
+}
+
+func (r *RejexBuilder) BeginNonSelectionSet() *RejexBuilder {
+    r.selectionActive = true
+    r.selectionContent = "[^"
+    return r
+}
+
+func (r *RejexBuilder) EndSelectionSet() *RejexBuilder {
+    if r.selectionActive {
+        segment := r.selectionContent + "]"
+        r.selectionActive = false
+        r.appendSegment(CHARACTERS, segment)
     }
     return r
 }

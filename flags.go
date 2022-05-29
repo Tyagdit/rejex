@@ -9,10 +9,14 @@ const (
     UngreedyFlag RejexFlag = 'U'
 )
 
-func (r *RejexBuilder) AddFlag(f RejexFlag) {
-    r.flags[f] = true
+func (r *RejexBuilder) AddFlags(f []RejexFlag) {
+    for _, flag := range f {
+        r.flags[flag] = true
+    }
 }
 
-func (r *RejexBuilder) RemoveFlag(f RejexFlag) {
-    r.flags[f] = false
+func (r *RejexBuilder) RemoveFlags(f []RejexFlag) {
+    for _, flag := range f {
+        r.flags[flag] = false
+    }
 }
