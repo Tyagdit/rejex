@@ -43,6 +43,14 @@ func (r *RejexBuilder) Letter() *RejexBuilder {
     return r.appendSegment(CHARACTERS, "[a-zA-Z]", "[^a-zA-Z]")
 }
 
+func (r *RejexBuilder) Uppercase() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "[A-Z]", "[^A-Z]")
+}
+
+func (r *RejexBuilder) Lowercase() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "[a-z]", "[^a-z]")
+}
+
 func (r *RejexBuilder) AlNumChar() *RejexBuilder {
     return r.appendSegment(CHARACTERS, "[0-9a-zA-Z]", "[^0-9a-zA-Z]")
 }
@@ -57,6 +65,10 @@ func (r *RejexBuilder) GraphicChar() *RejexBuilder {
 
 func (r *RejexBuilder) ASCIIChar() *RejexBuilder {
     return r.appendSegment(CHARACTERS, "[\x00-\x7F]", "[^\x00-\x7F]")
+}
+
+func (r *RejexBuilder) ControlChar() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "[\x00-\x1F\x7F]", "[^\x00-\x1F\x7F]")
 }
 
 func (r *RejexBuilder) OctalChar(s string) *RejexBuilder {
@@ -86,4 +98,35 @@ func (r *RejexBuilder) UnicodeClass(s string) *RejexBuilder {
     }
 
     return r.appendSegment(CHARACTERS, segment, unsegment)
+}
+
+
+// Common Unicode Classes
+
+func (r *RejexBuilder) LetterUnicode() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "\\pL", "\\PL")
+}
+
+func (r *RejexBuilder) UppercaseUnicode() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "\\p{Lu}", "\\P{Lu}")
+}
+
+func (r *RejexBuilder) LowercaseUnicode() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "\\p{Ll}", "\\P{Ll}")
+}
+
+func (r *RejexBuilder) WhitespaceUnicode() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "\\pZ", "\\PZ")
+}
+
+func (r *RejexBuilder) SymbolUnicode() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "\\pS", "\\PS")
+}
+
+func (r *RejexBuilder) NumberUnicode() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "\\pN", "\\PN")
+}
+
+func (r *RejexBuilder) PunctuationUnicode() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, "\\pP", "\\PP")
 }
