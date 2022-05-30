@@ -25,15 +25,6 @@ func (r *RejexBuilder) CharRange(from, to string) *RejexBuilder {
     return r.checkForSelection(segment)
 }
 
-func (r *RejexBuilder) Literally(s string) *RejexBuilder {
-    segment := fmt.Sprintf("\\Q%s\\E", s)
-    return r.appendSegment(CHARACTERS, segment)
-}
-
-func (r *RejexBuilder) AnyChar() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, ".")
-}
-
 func (r *RejexBuilder) Whitespace() *RejexBuilder {
     return r.appendSegment(CHARACTERS, "\\s", "\\S")
 }
@@ -78,30 +69,7 @@ func (r *RejexBuilder) ControlChar() *RejexBuilder {
     return r.checkForSelection("\x00-\x1F\x7F")
 }
 
-func (r *RejexBuilder) OctalChar(c int) *RejexBuilder {
-    if c >= 0 && c < 778 {
-        segment := fmt.Sprintf("\\%03d", c)
-        r.appendSegment(CHARACTERS, segment)
-    } else {
-        r.addError("Invalid octal character code")
-    }
-    return r
-}
-
-func (r *RejexBuilder) HexChar(s string) *RejexBuilder {
-    var segment string
-    if c, e := strconv.ParseInt(s, 16, 64); e != nil || c < 0 || c > 1114111 {
-        r.addError("Invalid hex character code")
-    } else if len(s) == 2 {
-        segment = fmt.Sprintf("\\x%s", s)
-        r.appendSegment(CHARACTERS, segment)
-    } else {
-        segment = fmt.Sprintf("\\x{%s}", s)
-        r.appendSegment(CHARACTERS, segment)
-    }
-
-    return r
-}
+// Unicode Classes
 
 func (r *RejexBuilder) UnicodeClass(s string) *RejexBuilder {
     var segment, unsegment string
@@ -115,9 +83,6 @@ func (r *RejexBuilder) UnicodeClass(s string) *RejexBuilder {
 
     return r.appendSegment(CHARACTERS, segment, unsegment)
 }
-
-
-// Common Unicode Classes
 
 func (r *RejexBuilder) LetterUnicode() *RejexBuilder {
     return r.appendSegment(CHARACTERS, "\\pL", "\\PL")
@@ -146,3 +111,31 @@ func (r *RejexBuilder) NumberUnicode() *RejexBuilder {
 func (r *RejexBuilder) PunctuationUnicode() *RejexBuilder {
     return r.appendSegment(CHARACTERS, "\\pP", "\\PP")
 }
+
+// Non Negate-able classes
+
+func (r *RejexBuilder) OctalChar(c int) *RejexBuilder {
+    if c >= 0 && c < 778 {
+        segment := fmt.Sprintf("\\%03d", c)
+        r.appendSegment(CHARACTERS, segment)
+    } else {
+        r.addError("Invalid octal character code")
+    }
+    return r
+}
+
+func (r *RejexBuilder) HexChar(s string) *RejexBuilder {
+    var segment string
+    if c, e := strconv.ParseInt(s, 16, 64); e != nil || c < 0 || c > 1114111 {
+        r.addError("Invalid hex character code")
+    } else if len(s) == 2 {
+        segment = fmt.Sprintf("\\x%s", s)
+        r.appendSegment(CHARACTERS, segment)
+    } else {
+        segment = fmt.Sprintf("\\x{%s}", s)
+        r.appendSegment(CHARACTERS, segment)
+    }
+
+    return r
+}
+

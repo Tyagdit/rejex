@@ -37,13 +37,19 @@ type RejexBuilder struct {
     selectionActive bool
     selectionContent string
 
-    IgnoreErrors bool
+    ignoreErrors bool
     Errors []RejexError
 
     // bufferedQuantifier string
 }
 
-func NewRejex() *RejexBuilder {
+func createRejexBuilder(ignoreErrors []bool) *RejexBuilder {
+    var ie bool
+    if len(ignoreErrors) > 0 {
+        ie = ignoreErrors[0]
+    } else {
+        ie = false
+    }
     return &RejexBuilder{
         flags: map[RejexFlag]bool{
             'i': false, // Case Insensitive
@@ -52,25 +58,21 @@ func NewRejex() *RejexBuilder {
             'U': false, // Ungreedy
         },
         groupContent: make([]string, 2),
+        ignoreErrors: ie,
     }
 }
 
-func NewRejexFromString(s string) *RejexBuilder {
-    r := RejexBuilder{
-        flags: map[RejexFlag]bool{
-            'i': false, // Case Insensitive
-            'm': false, // Multiline
-            's': false, // Single Line
-            'U': false, // Ungreedy
-        },
-        groupContent: make([]string, 2),
-    }
+func NewRejex(ignoreErrors ...bool) *RejexBuilder {
+    return createRejexBuilder(ignoreErrors)
+}
 
+func NewRejexFromString(s string, ignoreErrors ...bool) *RejexBuilder {
+    r := createRejexBuilder(ignoreErrors)
     r.WriteString(s)
-    return &r
+    return r
 }
 
-func (r *RejexBuilder) Build() string {
+func (r *RejexBuilder) Build() (string, []RejexError) {
     flagStr := "(?"
     for f, b := range r.flags {
         if b { flagStr += string(f) }
@@ -86,16 +88,16 @@ func (r *RejexBuilder) Build() string {
         r.addError("Building without closing group")
     }
 
-    if !r.IgnoreErrors {
+    if !r.ignoreErrors {
         for _, err := range r.Errors {
             fmt.Println(err.Error())
         }
     }
 
     if flagStr == "(?)" {
-        return r.String()
+        return r.String(), r.Errors
     } else {
-        return flagStr + r.String()
+        return flagStr + r.String(), r.Errors
     }
 }
 
@@ -132,7 +134,13 @@ func (r *RejexBuilder) addError(err string) {
 // General
 
 func (r *RejexBuilder) Not() *RejexBuilder {
-    r.negateNext = !r.negateNext
+    if r.selectionActive {
+        r.addError(
+            "Negation cannot be used in a selection set, use `BeginNonSelectionSet()` instead",
+        )
+    } else {
+        r.negateNext = !r.negateNext
+    }
     return r
 }
 
@@ -142,6 +150,15 @@ func (r *RejexBuilder) Characters(s string) *RejexBuilder {
 
 func (r *RejexBuilder) EscapedCharacters(s string) *RejexBuilder {
     segment := regexp.QuoteMeta(s)
+    return r.appendSegment(CHARACTERS, segment)
+}
+
+func (r *RejexBuilder) AnyChar() *RejexBuilder {
+    return r.appendSegment(CHARACTERS, ".")
+}
+
+func (r *RejexBuilder) Literally(s string) *RejexBuilder {
+    segment := fmt.Sprintf("\\Q%s\\E", s)
     return r.appendSegment(CHARACTERS, segment)
 }
 
@@ -215,7 +232,7 @@ func (r *RejexBuilder) PreferFewer() *RejexBuilder {
         r.appendSegment(META, "?")
     } else {
         r.addError(
-            "'PreferFewer' should be used after a quantifier",
+            "'PreferFewer()' should only be used after a quantifier",
         )
     }
     return r
@@ -232,7 +249,7 @@ func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
         r.appendSegment(CHARACTERS, segment)
     } else {
         r.addError(
-            "Not enough options specified in 'EitherOr'",
+            "Not enough options specified in 'EitherOr()'",
         )
     }
     return r
@@ -266,7 +283,7 @@ func (r *RejexBuilder) BeginNonCaptureGroup() *RejexBuilder {
     return r.startNewGroup("(?:")
 }
 
-func (r *RejexBuilder) BeginGroupWithFlags(f []RejexFlag) *RejexBuilder {
+func (r *RejexBuilder) BeginGroupWithFlags(f RejexFlag) *RejexBuilder {
     segment := fmt.Sprintf("(?%s:", string(f))
     return r.startNewGroup(segment)
 }
