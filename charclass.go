@@ -5,18 +5,24 @@ import (
     "strconv"
 )
 
-func (r *RejexBuilder) AnyFrom(s string) *RejexBuilder {
-    anyFrom := fmt.Sprintf("[%s]", s)
-    noneFrom := fmt.Sprintf("[^%s]", s)
+func (r *RejexBuilder) checkForSelection(segment string) *RejexBuilder {
+    if !r.selectionActive {
+        segment = fmt.Sprintf("[%s]", segment)
+        unsegment := fmt.Sprintf("[^%s]", segment)
+        r.appendSegment(CHARACTERS, segment, unsegment)
+    } else {
+        r.appendSegment(CHARACTERS, segment)
+    }
+    return r
+}
 
-    return r.appendSegment(CHARACTERS, anyFrom, noneFrom)
+func (r *RejexBuilder) AnyFrom(s string) *RejexBuilder {
+    return r.checkForSelection(s)
 }
 
 func (r *RejexBuilder) CharRange(from, to string) *RejexBuilder {
-    charRange := fmt.Sprintf("[%s-%s]", from, to)
-    noCharRange := fmt.Sprintf("[^%s-%s]", from, to)
-
-    return r.appendSegment(CHARACTERS, charRange, noCharRange)
+    segment := fmt.Sprintf("%s-%s", from, to)
+    return r.checkForSelection(segment)
 }
 
 func (r *RejexBuilder) Literally(s string) *RejexBuilder {
@@ -41,35 +47,35 @@ func (r *RejexBuilder) Digit() *RejexBuilder {
 }
 
 func (r *RejexBuilder) Letter() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "[a-zA-Z]", "[^a-zA-Z]")
+    return r.checkForSelection("a-zA-Z")
 }
 
 func (r *RejexBuilder) Uppercase() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "[A-Z]", "[^A-Z]")
+    return r.checkForSelection("A-Z")
 }
 
 func (r *RejexBuilder) Lowercase() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "[a-z]", "[^a-z]")
+    return r.checkForSelection("a-z")
 }
 
 func (r *RejexBuilder) AlNumChar() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "[0-9a-zA-Z]", "[^0-9a-zA-Z]")
+    return r.checkForSelection("0-9a-zA-Z")
 }
 
 func (r *RejexBuilder) Punctuation() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "[!-/:-@[-`{-~]", "[^!-/:-@[-`{-~]")
+    return r.checkForSelection("!-/:-@[-`{-~")
 }
 
 func (r *RejexBuilder) GraphicChar() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "[!-~]", "[^!-~]")
+    return r.checkForSelection("!-~")
 }
 
 func (r *RejexBuilder) ASCIIChar() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "[\x00-\x7F]", "[^\x00-\x7F]")
+    return r.checkForSelection("\x00-\x7F")
 }
 
 func (r *RejexBuilder) ControlChar() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "[\x00-\x1F\x7F]", "[^\x00-\x1F\x7F]")
+    return r.checkForSelection("\x00-\x1F\x7F")
 }
 
 func (r *RejexBuilder) OctalChar(c int) *RejexBuilder {

@@ -3,6 +3,7 @@ package rejex
 import (
 	"fmt"
     "strings"
+    "regexp"
 )
 
 const (
@@ -43,21 +44,27 @@ type RejexBuilder struct {
 }
 
 func NewRejex() *RejexBuilder {
-    return &RejexBuilder{flags: map[RejexFlag]bool{
-        'i': false, // Case Insensitive
-        'm': false, // Multiline
-        's': false, // Single Line
-        'U': false, // Ungreedy
-    }}
+    return &RejexBuilder{
+        flags: map[RejexFlag]bool{
+            'i': false, // Case Insensitive
+            'm': false, // Multiline
+            's': false, // Single Line
+            'U': false, // Ungreedy
+        },
+        groupContent: make([]string, 2),
+    }
 }
 
 func NewRejexFromString(s string) *RejexBuilder {
-    r := RejexBuilder{flags: map[RejexFlag]bool{
-        'i': false, // Case Insensitive
-        'm': false, // Multiline
-        's': false, // Single Line
-        'U': false, // Ungreedy
-    }}
+    r := RejexBuilder{
+        flags: map[RejexFlag]bool{
+            'i': false, // Case Insensitive
+            'm': false, // Multiline
+            's': false, // Single Line
+            'U': false, // Ungreedy
+        },
+        groupContent: make([]string, 2),
+    }
 
     r.WriteString(s)
     return &r
@@ -71,6 +78,13 @@ func (r *RejexBuilder) Build() string {
     flagStr += ")"
 
     r.negateNext = false
+
+    if r.selectionActive {
+        r.addError("Building without closing selection set")
+    }
+    if r.groupActive {
+        r.addError("Building without closing group")
+    }
 
     if !r.IgnoreErrors {
         for _, err := range r.Errors {
@@ -124,6 +138,11 @@ func (r *RejexBuilder) Not() *RejexBuilder {
 
 func (r *RejexBuilder) Characters(s string) *RejexBuilder {
     return r.appendSegment(CHARACTERS, s)
+}
+
+func (r *RejexBuilder) EscapedCharacters(s string) *RejexBuilder {
+    segment := regexp.QuoteMeta(s)
+    return r.appendSegment(CHARACTERS, segment)
 }
 
 // Anchors
@@ -255,7 +274,7 @@ func (r *RejexBuilder) BeginGroupWithFlags(f []RejexFlag) *RejexBuilder {
 func (r *RejexBuilder) EndGroup() *RejexBuilder {
     if r.groupActive {
         segment := r.groupContent[r.groupNestingLevel] + ")"
-        r.groupContent[r.groupNestingLevel] = ""
+        r.groupContent = r.groupContent[:r.groupNestingLevel]
         r.groupNestingLevel--
         if r.groupNestingLevel == 0 {
             r.groupActive = false
@@ -270,14 +289,22 @@ func (r *RejexBuilder) EndGroup() *RejexBuilder {
 }
 
 func (r *RejexBuilder) BeginSelectionSet() *RejexBuilder {
-    r.selectionActive = true
-    r.selectionContent = "["
+    if !r.selectionActive {
+        r.selectionActive = true
+        r.selectionContent = "["
+    } else {
+        r.addError("Cannot nest selection sets")
+    }
     return r
 }
 
 func (r *RejexBuilder) BeginNonSelectionSet() *RejexBuilder {
-    r.selectionActive = true
-    r.selectionContent = "[^"
+    if !r.selectionActive {
+        r.selectionActive = true
+        r.selectionContent = "[^"
+    } else {
+        r.addError("Cannot nest selection sets")
+    }
     return r
 }
 
