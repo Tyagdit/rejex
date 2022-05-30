@@ -12,6 +12,15 @@ const (
     META = "META"
 )
 
+type RejexError struct {
+    Position int
+    Err string
+}
+
+func (e *RejexError) Error() string {
+    return fmt.Sprintf("Error while building regex at position %d: %s", e.Position, e.Err)
+}
+
 type RejexBuilder struct {
     strings.Builder
 
@@ -26,6 +35,9 @@ type RejexBuilder struct {
 
     selectionActive bool
     selectionContent string
+
+    IgnoreErrors bool
+    Errors []RejexError
 
     // bufferedQuantifier string
 }
@@ -60,6 +72,12 @@ func (r *RejexBuilder) Build() string {
 
     r.negateNext = false
 
+    if !r.IgnoreErrors {
+        for _, err := range r.Errors {
+            fmt.Println(err.Error())
+        }
+    }
+
     if flagStr == "(?)" {
         return r.String()
     } else {
@@ -76,9 +94,9 @@ func (r *RejexBuilder) appendSegment(segmentType string, segment string, alt ...
     }
 
     if r.selectionActive {
-        r.selectionContent += segment
+        r.selectionContent += toWrite
     } else if r.groupActive {
-        r.groupContent[r.groupNestingLevel] += segment
+        r.groupContent[r.groupNestingLevel] += toWrite
     } else {
         r.WriteString(toWrite)
     }
@@ -87,6 +105,17 @@ func (r *RejexBuilder) appendSegment(segmentType string, segment string, alt ...
     r.lastSegmentType = segmentType
     return r
 }
+
+func (r *RejexBuilder) addError(err string) {
+    r.Errors = append(r.Errors,
+        RejexError{
+            r.Len(),
+            err,
+        },
+    )
+}
+
+// General
 
 func (r *RejexBuilder) Not() *RejexBuilder {
     r.negateNext = !r.negateNext
@@ -164,10 +193,13 @@ func (r *RejexBuilder) NToMOf(s string, n, m int) *RejexBuilder {
 
 func (r *RejexBuilder) PreferFewer() *RejexBuilder {
     if r.lastSegmentType == QUANTIFIER {
-        return r.appendSegment(META, "?")
+        r.appendSegment(META, "?")
     } else {
-        return r
+        r.addError(
+            "'PreferFewer' should be used after a quantifier",
+        )
     }
+    return r
 }
 
 func (r *RejexBuilder) Or() *RejexBuilder {
@@ -176,13 +208,15 @@ func (r *RejexBuilder) Or() *RejexBuilder {
 
 func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
     var segment string
-    if len(s) > 0 {
+    if len(s) > 1 {
         segment = fmt.Sprintf("(?:%s)", strings.Join(s, "|"))
+        r.appendSegment(CHARACTERS, segment)
     } else {
-        segment = ""
+        r.addError(
+            "Not enough options specified in 'EitherOr'",
+        )
     }
-
-    return r.appendSegment(CHARACTERS, segment)
+    return r
 }
 
 // Grouping
@@ -192,6 +226,10 @@ func (r *RejexBuilder) startNewGroup(s string) *RejexBuilder {
         r.groupActive = true
         r.groupNestingLevel++
         r.groupContent[r.groupNestingLevel] = s
+    } else {
+        r.addError(
+            "Group constructs do not work inside a selection set",
+        )
     }
     return r
 }
@@ -217,11 +255,16 @@ func (r *RejexBuilder) BeginGroupWithFlags(f []RejexFlag) *RejexBuilder {
 func (r *RejexBuilder) EndGroup() *RejexBuilder {
     if r.groupActive {
         segment := r.groupContent[r.groupNestingLevel] + ")"
+        r.groupContent[r.groupNestingLevel] = ""
         r.groupNestingLevel--
         if r.groupNestingLevel == 0 {
             r.groupActive = false
         }
         r.appendSegment(CHARACTERS, segment)
+    } else {
+        r.addError(
+            "Cannot end group, no group open",
+        )
     }
     return r
 }
@@ -241,8 +284,13 @@ func (r *RejexBuilder) BeginNonSelectionSet() *RejexBuilder {
 func (r *RejexBuilder) EndSelectionSet() *RejexBuilder {
     if r.selectionActive {
         segment := r.selectionContent + "]"
+        r.selectionContent = ""
         r.selectionActive = false
         r.appendSegment(CHARACTERS, segment)
+    } else {
+        r.addError(
+            "Cannot end selection set, no set open",
+        )
     }
     return r
 }
