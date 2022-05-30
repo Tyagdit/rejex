@@ -2,6 +2,7 @@ package rejex
 
 import (
     "fmt"
+    "strconv"
 )
 
 func (r *RejexBuilder) AnyFrom(s string) *RejexBuilder {
@@ -71,20 +72,29 @@ func (r *RejexBuilder) ControlChar() *RejexBuilder {
     return r.appendSegment(CHARACTERS, "[\x00-\x1F\x7F]", "[^\x00-\x1F\x7F]")
 }
 
-func (r *RejexBuilder) OctalChar(s string) *RejexBuilder {
-    segment := fmt.Sprintf("\\%s", s)
-    return r.appendSegment(CHARACTERS, segment)
+func (r *RejexBuilder) OctalChar(c int) *RejexBuilder {
+    if c >= 0 && c < 778 {
+        segment := fmt.Sprintf("\\%03d", c)
+        r.appendSegment(CHARACTERS, segment)
+    } else {
+        r.addError("Invalid octal character code")
+    }
+    return r
 }
 
 func (r *RejexBuilder) HexChar(s string) *RejexBuilder {
     var segment string
-    if len(s) == 2 {
+    if c, e := strconv.ParseInt(s, 16, 64); e != nil || c < 0 || c > 1114111 {
+        r.addError("Invalid hex character code")
+    } else if len(s) == 2 {
         segment = fmt.Sprintf("\\x%s", s)
+        r.appendSegment(CHARACTERS, segment)
     } else {
         segment = fmt.Sprintf("\\x{%s}", s)
+        r.appendSegment(CHARACTERS, segment)
     }
 
-    return r.appendSegment(CHARACTERS, segment)
+    return r
 }
 
 func (r *RejexBuilder) UnicodeClass(s string) *RejexBuilder {
