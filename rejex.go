@@ -7,10 +7,10 @@ import (
 )
 
 const (
-    ANCHOR = "ANCHOR"
-    QUANTIFIER = "QUANTIFIER"
-    CHARACTERS = "CHARACTERS"
-    META = "META"
+    anchor = "ANCHOR"
+    quantifier = "QUANTIFIER"
+    characters = "CHARACTERS"
+    meta = "META"
 )
 
 // RejexError is an error reported while constructing a regex
@@ -190,25 +190,25 @@ func (r *RejexBuilder) Not() *RejexBuilder {
 
 // Characters matches the exact input provided to it
 func (r *RejexBuilder) Characters(s string) *RejexBuilder {
-    return r.appendSegment(CHARACTERS, s)
+    return r.appendSegment(characters, s)
 }
 
 // EscapedCharacters matches the input provided after escaping the
 // regex special characters from it
 func (r *RejexBuilder) EscapedCharacters(s string) *RejexBuilder {
     segment := regexp.QuoteMeta(s)
-    return r.appendSegment(CHARACTERS, segment)
+    return r.appendSegment(characters, segment)
 }
 
 // AnyChar matches any single character
 func (r *RejexBuilder) AnyChar() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, ".")
+    return r.appendSegment(characters, ".")
 }
 
 // Literally matches the provided input enclosed in an escape sequence (\Q...\E)
 func (r *RejexBuilder) Literally(s string) *RejexBuilder {
     segment := fmt.Sprintf("\\Q%s\\E", s)
-    return r.appendSegment(CHARACTERS, segment)
+    return r.appendSegment(characters, segment)
 }
 
 // Anchors
@@ -216,34 +216,34 @@ func (r *RejexBuilder) Literally(s string) *RejexBuilder {
 // Starting matches the beginning of a string or the beginning of a line
 // when the multiline flag is set. It does not match any character
 func (r *RejexBuilder) Starting() *RejexBuilder {
-    return r.appendSegment(ANCHOR, "^")
+    return r.appendSegment(anchor, "^")
 }
 
 // AbsoluteStarting represents the absolute beginning of a string
 // unlike Starting, the multiline flag doesn't affect this, it always matches
 // the very beginning of a string. It does not match any character
 func (r *RejexBuilder) AbsoluteStarting() *RejexBuilder {
-    return r.appendSegment(ANCHOR, "\\A")
+    return r.appendSegment(anchor, "\\A")
 }
 
 // Ending matches the end of a string or the end of a line
 // when the multiline flag is set. It does not match any character
 func (r *RejexBuilder) Ending() *RejexBuilder {
-    return r.appendSegment(ANCHOR, "$")
+    return r.appendSegment(anchor, "$")
 }
 
-// AbsoluteEnding represents the absolute end of a string (^)
+// AbsoluteEnding represents the absolute end of a string
 // unlike Ending, the multiline flag doesn't affect this, it always matches
 // the very end of a string. It does not match any character
 func (r *RejexBuilder) AbsoluteEnding() *RejexBuilder {
-    return r.appendSegment(ANCHOR, "\\z")
+    return r.appendSegment(anchor, "\\z")
 }
 
 // WordBoundary matches the end or beginning of any word, it does not match
 // any character but is an anchor between a word character and a non
 // word character
 func (r *RejexBuilder) WordBoundary() *RejexBuilder {
-    return r.appendSegment(ANCHOR, "\\b", "\\B")
+    return r.appendSegment(anchor, "\\b", "\\B")
 }
 
 
@@ -262,7 +262,7 @@ func checkForGroup(s, q string) string {
 // Matches as many characters as it can
 func (r *RejexBuilder) ZeroOrOneOf(s string) *RejexBuilder {
     segment := checkForGroup(s, "?")
-    return r.appendSegment(QUANTIFIER, segment)
+    return r.appendSegment(quantifier, segment)
 }
 
 // ZeroOrMoreOf matches any number of occurances of the provided input
@@ -270,7 +270,7 @@ func (r *RejexBuilder) ZeroOrOneOf(s string) *RejexBuilder {
 // Matches as many characters as it can
 func (r *RejexBuilder) ZeroOrMoreOf(s string) *RejexBuilder {
     segment := checkForGroup(s, "*")
-    return r.appendSegment(QUANTIFIER, segment)
+    return r.appendSegment(quantifier, segment)
 }
 
 // OneOrMoreOf matches more than 1 occurances of the provided input
@@ -278,7 +278,7 @@ func (r *RejexBuilder) ZeroOrMoreOf(s string) *RejexBuilder {
 // Matches as many characters as it can
 func (r *RejexBuilder) OneOrMoreOf(s string) *RejexBuilder {
     segment := checkForGroup(s, "+")
-    return r.appendSegment(QUANTIFIER, segment)
+    return r.appendSegment(quantifier, segment)
 }
 
 // NOf matches exactly n occurances of the provided input
@@ -286,7 +286,7 @@ func (r *RejexBuilder) OneOrMoreOf(s string) *RejexBuilder {
 // Matches as many characters as it can
 func (r *RejexBuilder) NOf(s string, n int) *RejexBuilder {
     segment := checkForGroup(s, fmt.Sprintf("{%d}", n))
-    return r.appendSegment(QUANTIFIER, segment)
+    return r.appendSegment(quantifier, segment)
 }
 
 // NOrMoreOf matches more than n occurances of the provided input
@@ -294,7 +294,7 @@ func (r *RejexBuilder) NOf(s string, n int) *RejexBuilder {
 // Matches as many characters as it can
 func (r *RejexBuilder) NOrMoreOf(s string, n int) *RejexBuilder {
     segment := checkForGroup(s, fmt.Sprintf("{%d,}", n))
-    return r.appendSegment(QUANTIFIER, segment)
+    return r.appendSegment(quantifier, segment)
 }
 
 // NToMOf matches more than n and upto m occurances of the provided input
@@ -302,7 +302,7 @@ func (r *RejexBuilder) NOrMoreOf(s string, n int) *RejexBuilder {
 // Matches as many characters as it can, fewer than m
 func (r *RejexBuilder) NToMOf(s string, n, m int) *RejexBuilder {
     segment := checkForGroup(s, fmt.Sprintf("{%d,%d}", n, m))
-    return r.appendSegment(QUANTIFIER, segment)
+    return r.appendSegment(quantifier, segment)
 }
 
 // Meta
@@ -310,8 +310,8 @@ func (r *RejexBuilder) NToMOf(s string, n, m int) *RejexBuilder {
 // PreferFewer when used after a quantifier (such as OneOrMoreOf or NOf) makes
 // the segment match as few characters as it can, opposite of their default behaviour
 func (r *RejexBuilder) PreferFewer() *RejexBuilder {
-    if r.lastSegmentType == QUANTIFIER {
-        r.appendSegment(META, "?")
+    if r.lastSegmentType == quantifier {
+        r.appendSegment(meta, "?")
     } else {
         r.addError(
             "'PreferFewer()' should only be used after a quantifier",
@@ -323,7 +323,7 @@ func (r *RejexBuilder) PreferFewer() *RejexBuilder {
 // Or represents an alternative between whatever precedes it and whatever follows it.
 // Can be used within a group construct. Can be repeated to provide more than 2 alternatives
 func (r *RejexBuilder) Or() *RejexBuilder {
-    return r.appendSegment(META, "|")
+    return r.appendSegment(meta, "|")
 }
 
 // EitherOr matches any of the provided input strings by chaining together segments using
@@ -332,7 +332,7 @@ func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
     var segment string
     if len(s) > 1 {
         segment = fmt.Sprintf("(?:%s)", strings.Join(s, "|"))
-        r.appendSegment(CHARACTERS, segment)
+        r.appendSegment(characters, segment)
     } else {
         r.addError(
             "Not enough options specified in 'EitherOr()'",
@@ -345,14 +345,14 @@ func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
 // group number
 func (r *RejexBuilder) CapturedPatternByNum(n int) *RejexBuilder {
     segment := fmt.Sprintf("\\%d", n)
-    return r.appendSegment(META, segment)
+    return r.appendSegment(meta, segment)
 }
 
 // CapturedPatternByName matches a previusly captured group with the provided
 // group name
 func (r *RejexBuilder) CapturedPatternByName(s string) *RejexBuilder {
     segment := fmt.Sprintf("\\k<%s>", s)
-    return r.appendSegment(META, segment)
+    return r.appendSegment(meta, segment)
 }
 
 // Group Constructs
@@ -430,7 +430,7 @@ func (r *RejexBuilder) EndGroup() *RejexBuilder {
         if r.groupNestingLevel == 0 {
             r.groupActive = false
         }
-        r.appendSegment(CHARACTERS, segment)
+        r.appendSegment(characters, segment)
     } else {
         r.addError(
             "Cannot end group, no group open",
@@ -467,7 +467,7 @@ func (r *RejexBuilder) EndSelectionSet() *RejexBuilder {
         segment := r.selectionContent + "]"
         r.selectionContent = ""
         r.selectionActive = false
-        r.appendSegment(CHARACTERS, segment)
+        r.appendSegment(characters, segment)
     } else {
         r.addError(
             "Cannot end selection set, no set open",

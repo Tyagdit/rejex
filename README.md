@@ -1,5 +1,6 @@
 # Rejex
- An intuitive and readable way to create Regular Expressions in Go using method chains.
+An intuitive and readable way to create Regular Expressions in Go using method chains.
+Find the documentation [here](https://pkg.go.dev/github.com/tyagdit/rejex)
 
 # Usage
 

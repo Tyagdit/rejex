@@ -3,8 +3,8 @@ package rejex
 type RejexFlavor string
 
 const (
-    GoFlavor RejexFlavor = "go"
-    ECMAFlavor RejexFlavor = "ecma"
+    GoFlavor RejexFlavor = "GO"
+    ECMAFlavor RejexFlavor = "ECMA"
 )
 
 var goFlavorFlags = map[RejexFlag]bool{

@@ -9,9 +9,9 @@ func (r *RejexBuilder) checkForSelection(segment string) *RejexBuilder {
     if !r.selectionActive {
         segment = fmt.Sprintf("[%s]", segment)
         unsegment := fmt.Sprintf("[^%s]", segment)
-        r.appendSegment(CHARACTERS, segment, unsegment)
+        r.appendSegment(characters, segment, unsegment)
     } else {
-        r.appendSegment(CHARACTERS, segment)
+        r.appendSegment(characters, segment)
     }
     return r
 }
@@ -29,17 +29,17 @@ func (r *RejexBuilder) CharRange(from, to string) *RejexBuilder {
 
 // Whitespace matches any single whitespace character
 func (r *RejexBuilder) Whitespace() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\s", "\\S")
+    return r.appendSegment(characters, "\\s", "\\S")
 }
 
 // WordChar matches any single word character
 func (r *RejexBuilder) WordChar() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\w", "\\W")
+    return r.appendSegment(characters, "\\w", "\\W")
 }
 
 // Digit matches any single decimal digit
 func (r *RejexBuilder) Digit() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\d", "\\D")
+    return r.appendSegment(characters, "\\d", "\\D")
 }
 
 // Letter matches any single english letter
@@ -95,42 +95,42 @@ func (r *RejexBuilder) UnicodeClass(s string) *RejexBuilder {
         unsegment = fmt.Sprintf("\\P{%s}", s)
     }
 
-    return r.appendSegment(CHARACTERS, segment, unsegment)
+    return r.appendSegment(characters, segment, unsegment)
 }
 
 // LetterUnicode matches any single unicode letter
 func (r *RejexBuilder) LetterUnicode() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\pL", "\\PL")
+    return r.appendSegment(characters, "\\pL", "\\PL")
 }
 
 // UppercaseUnicode matches any single uppercase unicode character
 func (r *RejexBuilder) UppercaseUnicode() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\p{Lu}", "\\P{Lu}")
+    return r.appendSegment(characters, "\\p{Lu}", "\\P{Lu}")
 }
 
 // LowercaseUnicode matches any single lowercase unicode character
 func (r *RejexBuilder) LowercaseUnicode() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\p{Ll}", "\\P{Ll}")
+    return r.appendSegment(characters, "\\p{Ll}", "\\P{Ll}")
 }
 
 // WhitespaceUnicode matches any single unicode whitespace
 func (r *RejexBuilder) WhitespaceUnicode() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\pZ", "\\PZ")
+    return r.appendSegment(characters, "\\pZ", "\\PZ")
 }
 
 // SymbolUnicode matches any single unicode symbol character
 func (r *RejexBuilder) SymbolUnicode() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\pS", "\\PS")
+    return r.appendSegment(characters, "\\pS", "\\PS")
 }
 
 // NumberUnicode matches any single unicode number
 func (r *RejexBuilder) NumberUnicode() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\pN", "\\PN")
+    return r.appendSegment(characters, "\\pN", "\\PN")
 }
 
 // PunctuationUnicode matches any single unicode PunctuationUnicode character
 func (r *RejexBuilder) PunctuationUnicode() *RejexBuilder {
-    return r.appendSegment(CHARACTERS, "\\pP", "\\PP")
+    return r.appendSegment(characters, "\\pP", "\\PP")
 }
 
 // Non Negate-able classes
@@ -139,7 +139,7 @@ func (r *RejexBuilder) PunctuationUnicode() *RejexBuilder {
 func (r *RejexBuilder) OctalChar(c int) *RejexBuilder {
     if c >= 0 && c < 778 {
         segment := fmt.Sprintf("\\%03d", c)
-        r.appendSegment(CHARACTERS, segment)
+        r.appendSegment(characters, segment)
     } else {
         r.addError("Invalid octal character code")
     }
@@ -153,10 +153,10 @@ func (r *RejexBuilder) HexChar(s string) *RejexBuilder {
         r.addError("Invalid hex character code")
     } else if len(s) == 2 {
         segment = fmt.Sprintf("\\x%s", s)
-        r.appendSegment(CHARACTERS, segment)
+        r.appendSegment(characters, segment)
     } else {
         segment = fmt.Sprintf("\\x{%s}", s)
-        r.appendSegment(CHARACTERS, segment)
+        r.appendSegment(characters, segment)
     }
 
     return r
