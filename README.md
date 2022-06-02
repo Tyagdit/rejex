@@ -1,7 +1,5 @@
 # Rejex
  An intuitive and readable way to create Regular Expressions in Go using method chains.
-Only Go regex syntax specified in the
-[regexp/syntax](https://pkg.go.dev/regexp/syntax@go1.18.1) package of the standard library is supported.
 
 # Usage
 
@@ -32,7 +30,7 @@ reg, _ := rejex.NewRejex().
         Build()
 ```
 
-*Note*: Be mindful of passing escaped characters or characters with a preceding `\`, Go requires you to
+**Note**: Be mindful of passing escaped characters or characters with a preceding `\`, Go requires you to
 escape the `\` for it to be passed to the method or it will be treated as a metacharacter for the compiler
 to be interpreted before being passed. In other words if you're passing `\d` or directly to a method Go will
 error out saying `Unknown escape sequence`, instead pass it as `\\d`. Same rule applies to metacharacters
@@ -129,6 +127,28 @@ Now this gives the output
 [{'\x02' `'PreferFewer()' should only be used after a quantifier`} {'\x02' `Cannot end group, no group open`}]
 \d
 ```
+
+### Flavors
+
+The default flavor is the Go regex syntax specified in the
+[regexp/syntax](https://pkg.go.dev/regexp/syntax@go1.18.1) package of the standard library.
+To use different flavors, use the corresponding constructors.
+
+```Go
+reg, _ := rejex.NewECMARejex().
+        BeginPosLookahead().
+            Uppercase().
+            Lowercase().
+            NOrMoreOf("hi", 2).
+        EndGroup().
+        Build()
+```
+
+The supported flavors are:
+
+    - Golang
+    - ECMAScript
+
 
 # Examples
 

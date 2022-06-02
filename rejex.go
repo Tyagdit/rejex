@@ -26,6 +26,7 @@ type RejexBuilder struct {
     strings.Builder
 
     flags map[RejexFlag]bool
+    flavor RejexFlavor
 
     negateNext bool
     lastSegmentType string
@@ -43,42 +44,53 @@ type RejexBuilder struct {
     // bufferedQuantifier string
 }
 
-func createRejexBuilder(ignoreErrors []bool) *RejexBuilder {
+func createRejexBuilder(flavor RejexFlavor, ignoreErrors []bool) *RejexBuilder {
     var ie bool
     if len(ignoreErrors) > 0 {
         ie = ignoreErrors[0]
     } else {
         ie = false
     }
-    return &RejexBuilder{
-        flags: map[RejexFlag]bool{
-            'i': false, // Case Insensitive
-            'm': false, // Multiline
-            's': false, // Single Line
-            'U': false, // Ungreedy
-        },
+
+    r := RejexBuilder{
         groupContent: make([]string, 2),
         ignoreErrors: ie,
     }
+
+    r.flavor = flavor
+    switch flavor {
+    case GoFlavor:
+        r.flags = goFlavorFlags
+    case ECMAFlavor:
+        r.flags = ecmaFlavorFlags
+    }
+
+    return &r
 }
 
-func NewRejex(ignoreErrors ...bool) *RejexBuilder {
-    return createRejexBuilder(ignoreErrors)
+func NewRejex(ignoreErrors ...bool) GoFlavorInterface {
+    r := createRejexBuilder(GoFlavor, ignoreErrors)
+    return GoFlavorInterface(r)
 }
 
-func NewRejexFromString(s string, ignoreErrors ...bool) *RejexBuilder {
-    r := createRejexBuilder(ignoreErrors)
+func NewRejexFromString(s string, ignoreErrors ...bool) GoFlavorInterface {
+    r := createRejexBuilder(GoFlavor, ignoreErrors)
     r.WriteString(s)
-    return r
+    return GoFlavorInterface(r)
+}
+
+func NewECMARejex(ignoreErrors ...bool) ECMAFlavorInterface {
+    r := createRejexBuilder(ECMAFlavor, ignoreErrors)
+    return ECMAFlavorInterface(r)
+}
+
+func NewECMARejexFromString(s string, ignoreErrors ...bool) ECMAFlavorInterface {
+    r := createRejexBuilder(ECMAFlavor, ignoreErrors)
+    r.WriteString(s)
+    return ECMAFlavorInterface(r)
 }
 
 func (r *RejexBuilder) Build() (string, []RejexError) {
-    flagStr := "(?"
-    for f, b := range r.flags {
-        if b { flagStr += string(f) }
-    }
-    flagStr += ")"
-
     r.negateNext = false
 
     if r.selectionActive {
@@ -94,11 +106,28 @@ func (r *RejexBuilder) Build() (string, []RejexError) {
         }
     }
 
-    if flagStr == "(?)" {
-        return r.String(), r.Errors
-    } else {
-        return flagStr + r.String(), r.Errors
+    var flagStr, builtRejex string
+    switch r.flavor {
+    case GoFlavor:
+        flagStr = "(?"
+        for f, b := range r.flags {
+            if b { flagStr += string(f) }
+        }
+        flagStr += ")"
+        if flagStr == "(?)" {
+            builtRejex = r.String()
+        } else {
+            builtRejex = flagStr + r.String()
+        }
+    case ECMAFlavor:
+        flagStr = ""
+        for f, b := range r.flags {
+            if b { flagStr += string(f) }
+        }
+        builtRejex = fmt.Sprintf("/%s/%s", r.String(), flagStr)
     }
+
+    return builtRejex, r.Errors
 }
 
 func (r *RejexBuilder) appendSegment(segmentType string, segment string, alt ...string) *RejexBuilder {
@@ -255,7 +284,12 @@ func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
     return r
 }
 
-// Grouping
+func (r *RejexBuilder) CapturedPattern(s string) *RejexBuilder {
+    segment := fmt.Sprintf("\\k<%s>", s)
+    return r.appendSegment(META, segment)
+}
+
+// Group Constructs
 
 func (r *RejexBuilder) startNewGroup(s string) *RejexBuilder {
     if !r.selectionActive {
@@ -286,6 +320,22 @@ func (r *RejexBuilder) BeginNonCaptureGroup() *RejexBuilder {
 func (r *RejexBuilder) BeginGroupWithFlags(f RejexFlag) *RejexBuilder {
     segment := fmt.Sprintf("(?%s:", string(f))
     return r.startNewGroup(segment)
+}
+
+func (r *RejexBuilder) BeginPosLookahead() *RejexBuilder {
+    return r.startNewGroup("(?=")
+}
+
+func (r *RejexBuilder) BeginNegLookahead() *RejexBuilder {
+    return r.startNewGroup("(?!")
+}
+
+func (r *RejexBuilder) BeginPosLookbehind() *RejexBuilder {
+    return r.startNewGroup("(?<=")
+}
+
+func (r *RejexBuilder) BeginNegLookbehind() *RejexBuilder {
+    return r.startNewGroup("(?<!")
 }
 
 func (r *RejexBuilder) EndGroup() *RejexBuilder {
