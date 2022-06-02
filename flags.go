@@ -4,6 +4,7 @@ import (
     "fmt"
 )
 
+// RejexFlag represents a single regex flag
 type RejexFlag rune
 
 const (
@@ -30,10 +31,12 @@ func (r *RejexBuilder) changeFlags(f []RejexFlag, state bool) *RejexBuilder {
     return r
 }
 
+// AddFlags adds the provided flags to the regex
 func (r *RejexBuilder) AddFlags(f ...RejexFlag) *RejexBuilder {
     return r.changeFlags(f, true)
 }
 
+// RemoveFlags removes the provided flags from the regex
 func (r *RejexBuilder) RemoveFlags(f ...RejexFlag) *RejexBuilder {
     return r.changeFlags(f, true)
 }

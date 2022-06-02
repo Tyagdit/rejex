@@ -146,8 +146,8 @@ reg, _ := rejex.NewECMARejex().
 
 The supported flavors are:
 
-    - Golang
-    - ECMAScript
+- Golang
+- ECMAScript
 
 
 # Examples

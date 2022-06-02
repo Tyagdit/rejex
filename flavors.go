@@ -14,6 +14,7 @@ var goFlavorFlags = map[RejexFlag]bool{
     'U': false, // Ungreedy
 }
 
+// GoFlavorInterface represents regex of the Go standard syntax
 type GoFlavorInterface interface {
     Build() (string, []RejexError) 
 
@@ -48,7 +49,7 @@ type GoFlavorInterface interface {
     BeginCaptureGroup() *RejexBuilder 
     BeginNamedCaptureGroup(string) *RejexBuilder 
     BeginNonCaptureGroup() *RejexBuilder 
-    BeginGroupWithFlags(RejexFlag) *RejexBuilder 
+    BeginGroupWithFlags([]RejexFlag) *RejexBuilder 
     EndGroup() *RejexBuilder 
     BeginSelectionSet() *RejexBuilder 
     BeginNonSelectionSet() *RejexBuilder 
@@ -94,6 +95,8 @@ var ecmaFlavorFlags = map[RejexFlag]bool{
     'y': false, // Sticky
     'u': false, // Unicode
 }
+
+// ECMAFlavorInterface represents regex of the ECMAScript standard syntax
 type ECMAFlavorInterface interface {
     Build() (string, []RejexError) 
 
@@ -120,7 +123,8 @@ type ECMAFlavorInterface interface {
     PreferFewer() *RejexBuilder 
     Or() *RejexBuilder 
     EitherOr(...string) *RejexBuilder 
-    CapturedPattern(string) *RejexBuilder
+    CapturedPatternByNum(int) *RejexBuilder
+    CapturedPatternByName(string) *RejexBuilder
 
     // Group Constructs
     BeginCaptureGroup() *RejexBuilder 
@@ -168,5 +172,5 @@ type ECMAFlavorInterface interface {
     LineEnding() *RejexBuilder 
 }
 
-type VimFlavorInterface interface {}
-type GrepFlavorInterface interface {}
+// type VimFlavorInterface interface {}
+// type GrepFlavorInterface interface {}

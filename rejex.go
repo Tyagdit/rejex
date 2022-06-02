@@ -13,15 +13,18 @@ const (
     META = "META"
 )
 
+// RejexError is an error reported while constructing a regex
 type RejexError struct {
     Position int
     Err string
 }
 
+// Error returns a formatted error message
 func (e *RejexError) Error() string {
     return fmt.Sprintf("Error while building regex at position %d: %s", e.Position, e.Err)
 }
 
+// RejexBuilder defines a regex string before being fully constructed
 type RejexBuilder struct {
     strings.Builder
 
@@ -68,28 +71,39 @@ func createRejexBuilder(flavor RejexFlavor, ignoreErrors []bool) *RejexBuilder {
     return &r
 }
 
+// NewRejex creates a new RejexBuilder object used to construct a regex. This uses
+// the Go flavored syntax.
 func NewRejex(ignoreErrors ...bool) GoFlavorInterface {
     r := createRejexBuilder(GoFlavor, ignoreErrors)
     return GoFlavorInterface(r)
 }
 
+// NewRejexFromString creates a new RejexBuilder object used to construct a regex and
+// poppulates it with a provided regex string, this string is not validated to be valid
+// syntax. This uses the golang flavored syntax.
 func NewRejexFromString(s string, ignoreErrors ...bool) GoFlavorInterface {
     r := createRejexBuilder(GoFlavor, ignoreErrors)
     r.WriteString(s)
     return GoFlavorInterface(r)
 }
 
+// NewECMARejex creates a new RejexBuilder object used to construct a regex. This uses
+// the ECMAScript flavored syntax.
 func NewECMARejex(ignoreErrors ...bool) ECMAFlavorInterface {
     r := createRejexBuilder(ECMAFlavor, ignoreErrors)
     return ECMAFlavorInterface(r)
 }
 
+// NewECMARejexFromString creates a new RejexBuilder object used to construct a regex and
+// poppulates it with a provided regex string, this string is not validated to be valid
+// syntax. This uses the ECMAScript flavored syntax.
 func NewECMARejexFromString(s string, ignoreErrors ...bool) ECMAFlavorInterface {
     r := createRejexBuilder(ECMAFlavor, ignoreErrors)
     r.WriteString(s)
     return ECMAFlavorInterface(r)
 }
 
+// Build constructs the final regex string and returns it along with a list of errors
 func (r *RejexBuilder) Build() (string, []RejexError) {
     r.negateNext = false
 
@@ -162,6 +176,7 @@ func (r *RejexBuilder) addError(err string) {
 
 // General
 
+// Not queues the following segment to be negated, converting '\d' to '\D' for instance
 func (r *RejexBuilder) Not() *RejexBuilder {
     if r.selectionActive {
         r.addError(
@@ -173,19 +188,24 @@ func (r *RejexBuilder) Not() *RejexBuilder {
     return r
 }
 
+// Characters matches the exact input provided to it
 func (r *RejexBuilder) Characters(s string) *RejexBuilder {
     return r.appendSegment(CHARACTERS, s)
 }
 
+// EscapedCharacters matches the input provided after escaping the
+// regex special characters from it
 func (r *RejexBuilder) EscapedCharacters(s string) *RejexBuilder {
     segment := regexp.QuoteMeta(s)
     return r.appendSegment(CHARACTERS, segment)
 }
 
+// AnyChar matches any single character
 func (r *RejexBuilder) AnyChar() *RejexBuilder {
     return r.appendSegment(CHARACTERS, ".")
 }
 
+// Literally matches the provided input enclosed in an escape sequence (\Q...\E)
 func (r *RejexBuilder) Literally(s string) *RejexBuilder {
     segment := fmt.Sprintf("\\Q%s\\E", s)
     return r.appendSegment(CHARACTERS, segment)
@@ -193,22 +213,35 @@ func (r *RejexBuilder) Literally(s string) *RejexBuilder {
 
 // Anchors
 
+// Starting matches the beginning of a string or the beginning of a line
+// when the multiline flag is set. It does not match any character
 func (r *RejexBuilder) Starting() *RejexBuilder {
     return r.appendSegment(ANCHOR, "^")
 }
 
+// AbsoluteStarting represents the absolute beginning of a string
+// unlike Starting, the multiline flag doesn't affect this, it always matches
+// the very beginning of a string. It does not match any character
 func (r *RejexBuilder) AbsoluteStarting() *RejexBuilder {
     return r.appendSegment(ANCHOR, "\\A")
 }
 
+// Ending matches the end of a string or the end of a line
+// when the multiline flag is set. It does not match any character
 func (r *RejexBuilder) Ending() *RejexBuilder {
     return r.appendSegment(ANCHOR, "$")
 }
 
+// AbsoluteEnding represents the absolute end of a string (^)
+// unlike Ending, the multiline flag doesn't affect this, it always matches
+// the very end of a string. It does not match any character
 func (r *RejexBuilder) AbsoluteEnding() *RejexBuilder {
     return r.appendSegment(ANCHOR, "\\z")
 }
 
+// WordBoundary matches the end or beginning of any word, it does not match
+// any character but is an anchor between a word character and a non
+// word character
 func (r *RejexBuilder) WordBoundary() *RejexBuilder {
     return r.appendSegment(ANCHOR, "\\b", "\\B")
 }
@@ -224,31 +257,49 @@ func checkForGroup(s, q string) string {
     }
 }
 
+// ZeroOrOneOf matches exactly 0 or 1 occurance of the provided input
+// the input can be an empty string for this to affect the segment preceding it.
+// Matches as many characters as it can
 func (r *RejexBuilder) ZeroOrOneOf(s string) *RejexBuilder {
     segment := checkForGroup(s, "?")
     return r.appendSegment(QUANTIFIER, segment)
 }
 
+// ZeroOrMoreOf matches any number of occurances of the provided input
+// the input can be an empty string for this to affect the segment preceding it.
+// Matches as many characters as it can
 func (r *RejexBuilder) ZeroOrMoreOf(s string) *RejexBuilder {
     segment := checkForGroup(s, "*")
     return r.appendSegment(QUANTIFIER, segment)
 }
 
+// OneOrMoreOf matches more than 1 occurances of the provided input
+// the input can be an empty string for this to affect the segment preceding it.
+// Matches as many characters as it can
 func (r *RejexBuilder) OneOrMoreOf(s string) *RejexBuilder {
     segment := checkForGroup(s, "+")
     return r.appendSegment(QUANTIFIER, segment)
 }
 
+// NOf matches exactly n occurances of the provided input
+// the input can be an empty string for this to affect the segment preceding it.
+// Matches as many characters as it can
 func (r *RejexBuilder) NOf(s string, n int) *RejexBuilder {
     segment := checkForGroup(s, fmt.Sprintf("{%d}", n))
     return r.appendSegment(QUANTIFIER, segment)
 }
 
+// NOrMoreOf matches more than n occurances of the provided input
+// the input can be an empty string for this to affect the segment preceding it.
+// Matches as many characters as it can
 func (r *RejexBuilder) NOrMoreOf(s string, n int) *RejexBuilder {
     segment := checkForGroup(s, fmt.Sprintf("{%d,}", n))
     return r.appendSegment(QUANTIFIER, segment)
 }
 
+// NToMOf matches more than n and upto m occurances of the provided input
+// the input can be an empty string for this to affect the segment preceding it.
+// Matches as many characters as it can, fewer than m
 func (r *RejexBuilder) NToMOf(s string, n, m int) *RejexBuilder {
     segment := checkForGroup(s, fmt.Sprintf("{%d,%d}", n, m))
     return r.appendSegment(QUANTIFIER, segment)
@@ -256,6 +307,8 @@ func (r *RejexBuilder) NToMOf(s string, n, m int) *RejexBuilder {
 
 // Meta
 
+// PreferFewer when used after a quantifier (such as OneOrMoreOf or NOf) makes
+// the segment match as few characters as it can, opposite of their default behaviour
 func (r *RejexBuilder) PreferFewer() *RejexBuilder {
     if r.lastSegmentType == QUANTIFIER {
         r.appendSegment(META, "?")
@@ -267,10 +320,14 @@ func (r *RejexBuilder) PreferFewer() *RejexBuilder {
     return r
 }
 
+// Or represents an alternative between whatever precedes it and whatever follows it.
+// Can be used within a group construct. Can be repeated to provide more than 2 alternatives
 func (r *RejexBuilder) Or() *RejexBuilder {
     return r.appendSegment(META, "|")
 }
 
+// EitherOr matches any of the provided input strings by chaining together segments using
+// the Or syntax. This uses a non-capturing group by default
 func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
     var segment string
     if len(s) > 1 {
@@ -284,7 +341,16 @@ func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
     return r
 }
 
-func (r *RejexBuilder) CapturedPattern(s string) *RejexBuilder {
+// CapturedPatternByNum matches a previusly captured group with the provided
+// group number
+func (r *RejexBuilder) CapturedPatternByNum(n int) *RejexBuilder {
+    segment := fmt.Sprintf("\\%d", n)
+    return r.appendSegment(META, segment)
+}
+
+// CapturedPatternByName matches a previusly captured group with the provided
+// group name
+func (r *RejexBuilder) CapturedPatternByName(s string) *RejexBuilder {
     segment := fmt.Sprintf("\\k<%s>", s)
     return r.appendSegment(META, segment)
 }
@@ -304,40 +370,58 @@ func (r *RejexBuilder) startNewGroup(s string) *RejexBuilder {
     return r
 }
 
+// BeginCaptureGroup represents the start of a new capture group with a group number
 func (r *RejexBuilder) BeginCaptureGroup() *RejexBuilder {
     return r.startNewGroup("(")
 }
 
+// BeginNamedCaptureGroup represents the start of a new capture group with a group name
 func (r *RejexBuilder) BeginNamedCaptureGroup(name string) *RejexBuilder {
     segment := fmt.Sprintf("(?P<%s>", name)
     return r.startNewGroup(segment)
 }
 
+// BeginNonCaptureGroup represents the start of a new group with no group number or name
 func (r *RejexBuilder) BeginNonCaptureGroup() *RejexBuilder {
     return r.startNewGroup("(?:")
 }
 
-func (r *RejexBuilder) BeginGroupWithFlags(f RejexFlag) *RejexBuilder {
+// BeginGroupWithFlags represents the start of a new group which use the provided flags.
+// These flags only affect the pattern within this group
+func (r *RejexBuilder) BeginGroupWithFlags(f []RejexFlag) *RejexBuilder {
     segment := fmt.Sprintf("(?%s:", string(f))
     return r.startNewGroup(segment)
 }
 
+// BeginPosLookahead represents the start of a new group which only allows the preceding
+// segment to match when the pattern in this group follows it but without actualy matching
+// this pattern
 func (r *RejexBuilder) BeginPosLookahead() *RejexBuilder {
     return r.startNewGroup("(?=")
 }
 
+// BeginNegLookahead represents the start of a new group which only allows the preceding
+// segment to match when the pattern in this group does not follow it but without actualy matching
+// this pattern
 func (r *RejexBuilder) BeginNegLookahead() *RejexBuilder {
     return r.startNewGroup("(?!")
 }
 
+// BeginPosLookbehind represents the start of a new group which only allows the following
+// segment to match when the pattern in this group precedes it but without actualy matching
+// this pattern
 func (r *RejexBuilder) BeginPosLookbehind() *RejexBuilder {
     return r.startNewGroup("(?<=")
 }
 
+// BeginNegLookbehind represents the start of a new group which only allows the following
+// segment to match when the pattern in this group does not precede it but without actualy matching
+// this pattern
 func (r *RejexBuilder) BeginNegLookbehind() *RejexBuilder {
     return r.startNewGroup("(?<!")
 }
 
+// EndGroup represents the end of the last opened group
 func (r *RejexBuilder) EndGroup() *RejexBuilder {
     if r.groupActive {
         segment := r.groupContent[r.groupNestingLevel] + ")"
@@ -355,6 +439,7 @@ func (r *RejexBuilder) EndGroup() *RejexBuilder {
     return r
 }
 
+// BeginSelectionSet represents the start of a set of characters out of which only one needs be matched
 func (r *RejexBuilder) BeginSelectionSet() *RejexBuilder {
     if !r.selectionActive {
         r.selectionActive = true
@@ -365,6 +450,7 @@ func (r *RejexBuilder) BeginSelectionSet() *RejexBuilder {
     return r
 }
 
+// BeginNonSelectionSet represents the start of a set of characters out of which none should be matched
 func (r *RejexBuilder) BeginNonSelectionSet() *RejexBuilder {
     if !r.selectionActive {
         r.selectionActive = true
@@ -375,6 +461,7 @@ func (r *RejexBuilder) BeginNonSelectionSet() *RejexBuilder {
     return r
 }
 
+// EndGroup represents the end of the last opened selection set
 func (r *RejexBuilder) EndSelectionSet() *RejexBuilder {
     if r.selectionActive {
         segment := r.selectionContent + "]"
