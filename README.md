@@ -14,7 +14,7 @@ Finish building the regex with the Build() method to obtain the built regex
 reg, _ := rejex.NewRejex().
         Starting().
         Characters("abcd").
-        Digit().
+        AnyDigit().
         Build()
 ```
 
@@ -24,9 +24,9 @@ and completed with `EndGroup()`. A similar method exists for selection sets (lik
 ```Go
 reg, _ := rejex.NewRejex().
         BeginNamedCaptureGroup("groupname").
-            Uppercase().
-            Lowercase().
-            Digit().
+            AnyUppercase().
+            AnyLowercase().
+            AnyDigit().
         EndGroup().
         Build()
 ```
@@ -39,15 +39,15 @@ that Go does recognise like `\n`
 
 ### Negation
 
-Negation can only be used on character classses such as `Digit()` or `CharRange()`.
+Negation can only be used on character classses such as `AnyDigit()` or `AnyFromCharRange()`.
 To get negated selection sets either use `BeginNonSelectionSet()` or `Not().AnyFrom()`.
 
 ```Go
 reg, _ := rejex.NewRejex().
         BeginNamedCaptureGroup("groupname").
-            Uppercase().
-            Lowercase().
-            Not().Digit().
+            AnyUppercase().
+            AnyLowercase().
+            Not().AnyDigit().
         EndGroup().
         Build()
 ```
@@ -60,10 +60,10 @@ a character segment to quantify said preceding segment
 ```Go
 reg, _ := rejex.NewRejex().
         BeginNamedCaptureGroup("groupname").
-            Uppercase().
-            Lowercase().
+            AnyUppercase().
+            AnyLowercase().
             NOrMoreOf("hi", 2).
-            Not().Digit().OneOrMoreOf("").
+            Not().AnyDigit().OneOrMoreOf("").
         EndGroup().
         Build()
 ```
@@ -76,10 +76,10 @@ in the chain before `Build()`.
 ```Go
 reg, _ := rejex.NewRejex().
         BeginNamedCaptureGroup("groupname").
-            Uppercase().
-            Lowercase().
+            AnyUppercase().
+            AnyLowercase().
             NOrMoreOf("hi", 2).
-            Not().Digit().OneOrMoreOf("").
+            Not().AnyDigit().OneOrMoreOf("").
         EndGroup().
         AddFlags(
             rejex.CaseInsensitiveFlag,
@@ -96,7 +96,7 @@ The returned error value is of type `[]RejexError` which is a list of the errors
 
 ```Go
 reg, e = rejex.NewRejex().
-        Digit().
+        AnyDigit().
         PreferFewer().
         EndGroup().
         Build()
@@ -116,7 +116,7 @@ methods have an `ignoreErrors` param.
 
 ```Go
 reg, e = rejex.NewRejex(true).
-        Digit().
+        AnyDigit().
         PreferFewer().
         EndGroup().
         Build()
@@ -138,8 +138,8 @@ To use different flavors, use the corresponding constructors.
 ```Go
 reg, _ := rejex.NewECMARejex().
         BeginPosLookahead().
-            Uppercase().
-            Lowercase().
+            AnyUppercase().
+            AnyLowercase().
             NOrMoreOf("hi", 2).
         EndGroup().
         Build()
@@ -150,6 +150,12 @@ The supported flavors are:
 - Golang
 - ECMAScript
 
+Many flavors of regex have multiple implementations, subflavors and different default options
+which makes it impractical to provide a comprehensive way to generate reliable regexes. This means
+that the features available, or their particular syntax may be incompatible or behave differently
+in your particular case. It is advised that you look at the docs of the specific implementation
+you're using in case you need some complex regexes or the generated regex fails. You should also
+test that the regex behaves the way you intend to before using it in production.
 
 # Examples
 
@@ -160,13 +166,13 @@ reg, _ := rejex.NewRejex().
         BeginNonCaptureGroup().
             Characters("/").
             BeginSelectionSet().
-                CharRange("a", "z").
-                Uppercase().
+                AnyFromCharRange("a", "z").
+                AnyUppercase().
                 AnyFrom("\\d.").
             EndSelectionSet().
             BeginSelectionSet().
-                Letter().
-                Digit().
+                AnyLetter().
+                AnyDigit().
                 EscapedCharacters("-.").
             EndSelectionSet().
             NToMOf("", 0, 61).

@@ -21,64 +21,64 @@ func (r *RejexBuilder) AnyFrom(s string) *RejexBuilder {
     return r.checkForSelection(s)
 }
 
-// CharRange matches any single character in the range between the 2 characters provided
-func (r *RejexBuilder) CharRange(from, to string) *RejexBuilder {
+// AnyFromCharRange matches any single character in the range between the 2 characters provided
+func (r *RejexBuilder) AnyFromCharRange(from, to string) *RejexBuilder {
     segment := fmt.Sprintf("%s-%s", from, to)
     return r.checkForSelection(segment)
 }
 
-// Whitespace matches any single whitespace character
-func (r *RejexBuilder) Whitespace() *RejexBuilder {
+// AnyWhitespace matches any single whitespace character
+func (r *RejexBuilder) AnyWhitespace() *RejexBuilder {
     return r.appendSegment(characters, "\\s", "\\S")
 }
 
-// WordChar matches any single word character
-func (r *RejexBuilder) WordChar() *RejexBuilder {
+// AnyWordChar matches any single word character
+func (r *RejexBuilder) AnyWordChar() *RejexBuilder {
     return r.appendSegment(characters, "\\w", "\\W")
 }
 
-// Digit matches any single decimal digit
-func (r *RejexBuilder) Digit() *RejexBuilder {
+// AnyDigit matches any single decimal digit
+func (r *RejexBuilder) AnyDigit() *RejexBuilder {
     return r.appendSegment(characters, "\\d", "\\D")
 }
 
-// Letter matches any single english letter
-func (r *RejexBuilder) Letter() *RejexBuilder {
+// AnyLetter matches any single english letter
+func (r *RejexBuilder) AnyLetter() *RejexBuilder {
     return r.checkForSelection("a-zA-Z")
 }
 
-// Uppercase matches any single uppercase english letter
-func (r *RejexBuilder) Uppercase() *RejexBuilder {
+// AnyUppercase matches any single uppercase english letter
+func (r *RejexBuilder) AnyUppercase() *RejexBuilder {
     return r.checkForSelection("A-Z")
 }
 
-// Lowercase matches any single lowercase english letter
-func (r *RejexBuilder) Lowercase() *RejexBuilder {
+// AnyLowercase matches any single lowercase english letter
+func (r *RejexBuilder) AnyLowercase() *RejexBuilder {
     return r.checkForSelection("a-z")
 }
 
-// AlNumChar matches any single english letter or digit
-func (r *RejexBuilder) AlNumChar() *RejexBuilder {
+// AnyAlNumChar matches any single english letter or digit
+func (r *RejexBuilder) AnyAlNumChar() *RejexBuilder {
     return r.checkForSelection("0-9a-zA-Z")
 }
 
-// Punctuation matches any single Punctuation character
-func (r *RejexBuilder) Punctuation() *RejexBuilder {
+// AnyPunctuation matches any single Punctuation character
+func (r *RejexBuilder) AnyPunctuation() *RejexBuilder {
     return r.checkForSelection("!-/:-@[-`{-~")
 }
 
-// GraphicChar matches any visible character
-func (r *RejexBuilder) GraphicChar() *RejexBuilder {
+// AnyGraphicChar matches any visible character
+func (r *RejexBuilder) AnyGraphicChar() *RejexBuilder {
     return r.checkForSelection("!-~")
 }
 
-// ASCIIChar matches any single ASCII character
-func (r *RejexBuilder) ASCIIChar() *RejexBuilder {
+// AnyASCIIChar matches any single ASCII character
+func (r *RejexBuilder) AnyASCIIChar() *RejexBuilder {
     return r.checkForSelection("\x00-\x7F")
 }
 
-// ControlChar matches any sigle control character
-func (r *RejexBuilder) ControlChar() *RejexBuilder {
+// AnyControlChar matches any sigle control character
+func (r *RejexBuilder) AnyControlChar() *RejexBuilder {
     return r.checkForSelection("\x00-\x1F\x7F")
 }
 
@@ -98,38 +98,38 @@ func (r *RejexBuilder) UnicodeClass(s string) *RejexBuilder {
     return r.appendSegment(characters, segment, unsegment)
 }
 
-// LetterUnicode matches any single unicode letter
-func (r *RejexBuilder) LetterUnicode() *RejexBuilder {
+// AnyUnicodeLetter matches any single unicode letter
+func (r *RejexBuilder) AnyUnicodeLetter() *RejexBuilder {
     return r.appendSegment(characters, "\\pL", "\\PL")
 }
 
-// UppercaseUnicode matches any single uppercase unicode character
-func (r *RejexBuilder) UppercaseUnicode() *RejexBuilder {
+// AnyUnicodeUppercase matches any single uppercase unicode character
+func (r *RejexBuilder) AnyUnicodeUppercase() *RejexBuilder {
     return r.appendSegment(characters, "\\p{Lu}", "\\P{Lu}")
 }
 
-// LowercaseUnicode matches any single lowercase unicode character
-func (r *RejexBuilder) LowercaseUnicode() *RejexBuilder {
+// AnyUnicodeLowercase matches any single lowercase unicode character
+func (r *RejexBuilder) AnyUnicodeLowercase() *RejexBuilder {
     return r.appendSegment(characters, "\\p{Ll}", "\\P{Ll}")
 }
 
-// WhitespaceUnicode matches any single unicode whitespace
-func (r *RejexBuilder) WhitespaceUnicode() *RejexBuilder {
+// AnyUnicodeWhitespace matches any single unicode whitespace
+func (r *RejexBuilder) AnyUnicodeWhitespace() *RejexBuilder {
     return r.appendSegment(characters, "\\pZ", "\\PZ")
 }
 
-// SymbolUnicode matches any single unicode symbol character
-func (r *RejexBuilder) SymbolUnicode() *RejexBuilder {
+// AnyUnicodeSymbol matches any single unicode symbol character
+func (r *RejexBuilder) AnyUnicodeSymbol() *RejexBuilder {
     return r.appendSegment(characters, "\\pS", "\\PS")
 }
 
-// NumberUnicode matches any single unicode number
-func (r *RejexBuilder) NumberUnicode() *RejexBuilder {
+// AnyUnicodeNumber matches any single unicode number
+func (r *RejexBuilder) AnyUnicodeNumber() *RejexBuilder {
     return r.appendSegment(characters, "\\pN", "\\PN")
 }
 
-// PunctuationUnicode matches any single unicode PunctuationUnicode character
-func (r *RejexBuilder) PunctuationUnicode() *RejexBuilder {
+// AnyUnicodePunctuation matches any single unicode punctuation character
+func (r *RejexBuilder) AnyUnicodePunctuation() *RejexBuilder {
     return r.appendSegment(characters, "\\pP", "\\PP")
 }
 
@@ -159,6 +159,18 @@ func (r *RejexBuilder) HexChar(s string) *RejexBuilder {
         r.appendSegment(characters, segment)
     }
 
+    return r
+}
+
+// ControlChar matches the control character represented by the provided control
+// character code
+func (r *RejexBuilder) ControlChar(s string) *RejexBuilder {
+    if len(s) == 1 {
+        segment := fmt.Sprintf("\\c%s", s)
+        r.appendSegment(characters, segment)
+    } else {
+        r.addError("Invalid control character code")
+    }
     return r
 }
 

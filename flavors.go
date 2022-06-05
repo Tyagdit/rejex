@@ -16,76 +16,76 @@ var goFlavorFlags = map[RejexFlag]bool{
 
 // GoFlavorInterface represents regex of the Go standard syntax
 type GoFlavorInterface interface {
-    Build() (string, []RejexError) 
+    Build() (string, []RejexError)
 
     // General
-    Not() *RejexBuilder 
-    Characters(string) *RejexBuilder 
-    EscapedCharacters(string) *RejexBuilder 
-    AnyChar() *RejexBuilder 
-    Literally(string) *RejexBuilder 
+    Not() *RejexBuilder
+    Characters(string) *RejexBuilder
+    EscapedCharacters(string) *RejexBuilder
+    AnyChar() *RejexBuilder
+    Literally(string) *RejexBuilder
 
     // Anchors
-    Starting() *RejexBuilder 
-    AbsoluteStarting() *RejexBuilder 
-    Ending() *RejexBuilder 
-    AbsoluteEnding() *RejexBuilder 
-    WordBoundary() *RejexBuilder 
+    Starting() *RejexBuilder
+    AbsoluteStarting() *RejexBuilder
+    Ending() *RejexBuilder
+    AbsoluteEnding() *RejexBuilder
+    WordBoundary() *RejexBuilder
 
     // Quantifiers
-    ZeroOrOneOf(string) *RejexBuilder 
-    ZeroOrMoreOf(string) *RejexBuilder 
-    OneOrMoreOf(string) *RejexBuilder 
-    NOf(string, int) *RejexBuilder 
-    NOrMoreOf(string, int) *RejexBuilder 
-    NToMOf(string, int, int) *RejexBuilder 
+    ZeroOrOneOf(string) *RejexBuilder
+    ZeroOrMoreOf(string) *RejexBuilder
+    OneOrMoreOf(string) *RejexBuilder
+    NOf(string, int) *RejexBuilder
+    NOrMoreOf(string, int) *RejexBuilder
+    NToMOf(string, int, int) *RejexBuilder
 
     // Meta
-    PreferFewer() *RejexBuilder 
-    Or() *RejexBuilder 
-    EitherOr(...string) *RejexBuilder 
+    PreferFewer() *RejexBuilder
+    Or() *RejexBuilder
+    EitherOr(...string) *RejexBuilder
 
     // Group Constructs
-    BeginCaptureGroup() *RejexBuilder 
-    BeginNamedCaptureGroup(string) *RejexBuilder 
-    BeginNonCaptureGroup() *RejexBuilder 
-    BeginGroupWithFlags([]RejexFlag) *RejexBuilder 
-    EndGroup() *RejexBuilder 
-    BeginSelectionSet() *RejexBuilder 
-    BeginNonSelectionSet() *RejexBuilder 
-    EndSelectionSet() *RejexBuilder 
+    BeginCaptureGroup() *RejexBuilder
+    BeginNamedCaptureGroup(string) *RejexBuilder
+    BeginNonCaptureGroup() *RejexBuilder
+    BeginGroupWithFlags([]RejexFlag) *RejexBuilder
+    EndGroup() *RejexBuilder
+    BeginSelectionSet() *RejexBuilder
+    BeginNonSelectionSet() *RejexBuilder
+    EndSelectionSet() *RejexBuilder
 
     // Char Classes
-    AnyFrom(string) *RejexBuilder 
-    CharRange(string, string) *RejexBuilder 
-    Whitespace() *RejexBuilder 
-    WordChar() *RejexBuilder 
-    Digit() *RejexBuilder 
-    Letter() *RejexBuilder 
-    Uppercase() *RejexBuilder 
-    Lowercase() *RejexBuilder 
-    AlNumChar() *RejexBuilder 
-    Punctuation() *RejexBuilder 
-    GraphicChar() *RejexBuilder 
-    ASCIIChar() *RejexBuilder 
-    ControlChar() *RejexBuilder 
-    UnicodeClass(string) *RejexBuilder 
-    LetterUnicode() *RejexBuilder 
-    UppercaseUnicode() *RejexBuilder 
-    LowercaseUnicode() *RejexBuilder 
-    WhitespaceUnicode() *RejexBuilder 
-    SymbolUnicode() *RejexBuilder 
-    NumberUnicode() *RejexBuilder 
-    PunctuationUnicode() *RejexBuilder 
-    OctalChar(int) *RejexBuilder 
-    HexChar(string) *RejexBuilder 
+    AnyFrom(string) *RejexBuilder
+    AnyFromCharRange(string, string) *RejexBuilder
+    AnyWhitespace() *RejexBuilder
+    AnyWordChar() *RejexBuilder
+    AnyDigit() *RejexBuilder
+    AnyLetter() *RejexBuilder
+    AnyUppercase() *RejexBuilder
+    AnyLowercase() *RejexBuilder
+    AnyAlNumChar() *RejexBuilder
+    AnyPunctuation() *RejexBuilder
+    AnyGraphicChar() *RejexBuilder
+    AnyASCIIChar() *RejexBuilder
+    AnyControlChar() *RejexBuilder
+    AnyUnicodeLetter() *RejexBuilder
+    AnyUnicodeUppercase() *RejexBuilder
+    AnyUnicodeLowercase() *RejexBuilder
+    AnyUnicodeWhitespace() *RejexBuilder
+    AnyUnicodeSymbol() *RejexBuilder
+    AnyUnicodeNumber() *RejexBuilder
+    AnyUnicodePunctuation() *RejexBuilder
+    UnicodeClass(string) *RejexBuilder
+    OctalChar(int) *RejexBuilder
+    HexChar(string) *RejexBuilder
 
     // Flags
-    AddFlags(...RejexFlag) *RejexBuilder 
+    AddFlags(...RejexFlag) *RejexBuilder
     RemoveFlags(...RejexFlag) *RejexBuilder
 
     // Utils
-    LineEnding() *RejexBuilder 
+    LineEnding() *RejexBuilder
 }
 
 var ecmaFlavorFlags = map[RejexFlag]bool{
@@ -98,79 +98,86 @@ var ecmaFlavorFlags = map[RejexFlag]bool{
 
 // ECMAFlavorInterface represents regex of the ECMAScript standard syntax
 type ECMAFlavorInterface interface {
-    Build() (string, []RejexError) 
+    Build() (string, []RejexError)
 
     // General
-    Not() *RejexBuilder 
-    Characters(string) *RejexBuilder 
-    EscapedCharacters(string) *RejexBuilder 
-    AnyChar() *RejexBuilder 
+    Not() *RejexBuilder
+    Characters(string) *RejexBuilder
+    EscapedCharacters(string) *RejexBuilder
+    AnyChar() *RejexBuilder
 
     // Anchors
-    Starting() *RejexBuilder 
-    Ending() *RejexBuilder 
-    WordBoundary() *RejexBuilder 
+    Starting() *RejexBuilder
+    Ending() *RejexBuilder
+    WordBoundary() *RejexBuilder
 
     // Quantifiers
-    ZeroOrOneOf(string) *RejexBuilder 
-    ZeroOrMoreOf(string) *RejexBuilder 
-    OneOrMoreOf(string) *RejexBuilder 
-    NOf(string, int) *RejexBuilder 
-    NOrMoreOf(string, int) *RejexBuilder 
-    NToMOf(string, int, int) *RejexBuilder 
+    ZeroOrOneOf(string) *RejexBuilder
+    ZeroOrMoreOf(string) *RejexBuilder
+    OneOrMoreOf(string) *RejexBuilder
+    NOf(string, int) *RejexBuilder
+    NOrMoreOf(string, int) *RejexBuilder
+    NToMOf(string, int, int) *RejexBuilder
 
     // Meta
-    PreferFewer() *RejexBuilder 
-    Or() *RejexBuilder 
-    EitherOr(...string) *RejexBuilder 
+    PreferFewer() *RejexBuilder
+    Or() *RejexBuilder
+    EitherOr(...string) *RejexBuilder
     CapturedPatternByNum(int) *RejexBuilder
     CapturedPatternByName(string) *RejexBuilder
 
     // Group Constructs
-    BeginCaptureGroup() *RejexBuilder 
-    BeginNamedCaptureGroup(string) *RejexBuilder 
-    BeginNonCaptureGroup() *RejexBuilder 
+    BeginCaptureGroup() *RejexBuilder
+    BeginNamedCaptureGroup(string) *RejexBuilder
+    BeginNonCaptureGroup() *RejexBuilder
     BeginPosLookahead() *RejexBuilder
     BeginNegLookahead() *RejexBuilder
     BeginPosLookbehind() *RejexBuilder
     BeginNegLookbehind() *RejexBuilder
-    EndGroup() *RejexBuilder 
-    BeginSelectionSet() *RejexBuilder 
-    BeginNonSelectionSet() *RejexBuilder 
-    EndSelectionSet() *RejexBuilder 
+    EndGroup() *RejexBuilder
+    BeginSelectionSet() *RejexBuilder
+    BeginNonSelectionSet() *RejexBuilder
+    EndSelectionSet() *RejexBuilder
 
     // Char Classes
-    AnyFrom(string) *RejexBuilder 
-    CharRange(string, string) *RejexBuilder 
-    Whitespace() *RejexBuilder 
-    WordChar() *RejexBuilder 
-    Digit() *RejexBuilder 
-    Letter() *RejexBuilder 
-    Uppercase() *RejexBuilder 
-    Lowercase() *RejexBuilder 
-    AlNumChar() *RejexBuilder 
-    Punctuation() *RejexBuilder 
-    GraphicChar() *RejexBuilder 
-    ASCIIChar() *RejexBuilder 
-    // ControlChar() *RejexBuilder 
-    UnicodeClass(string) *RejexBuilder 
-    LetterUnicode() *RejexBuilder 
-    UppercaseUnicode() *RejexBuilder 
-    LowercaseUnicode() *RejexBuilder 
-    WhitespaceUnicode() *RejexBuilder 
-    SymbolUnicode() *RejexBuilder 
-    NumberUnicode() *RejexBuilder 
-    PunctuationUnicode() *RejexBuilder 
-    OctalChar(int) *RejexBuilder 
-    HexChar(string) *RejexBuilder 
+    AnyFrom(string) *RejexBuilder
+    AnyFromCharRange(string, string) *RejexBuilder
+    AnyWhitespace() *RejexBuilder
+    AnyWordChar() *RejexBuilder
+    AnyDigit() *RejexBuilder
+    AnyLetter() *RejexBuilder
+    AnyUppercase() *RejexBuilder
+    AnyLowercase() *RejexBuilder
+    AnyAlNumChar() *RejexBuilder
+    AnyPunctuation() *RejexBuilder
+    AnyGraphicChar() *RejexBuilder
+    AnyASCIIChar() *RejexBuilder
+    AnyControlChar() *RejexBuilder
+    AnyUnicodeLetter() *RejexBuilder
+    AnyUnicodeUppercase() *RejexBuilder
+    AnyUnicodeLowercase() *RejexBuilder
+    AnyUnicodeWhitespace() *RejexBuilder
+    AnyUnicodeSymbol() *RejexBuilder
+    AnyUnicodeNumber() *RejexBuilder
+    AnyUnicodePunctuation() *RejexBuilder
+    UnicodeClass(string) *RejexBuilder
+    OctalChar(int) *RejexBuilder
+    HexChar(string) *RejexBuilder
+    ControlChar(string) *RejexBuilder
 
     // Flags
-    AddFlags(...RejexFlag) *RejexBuilder 
+    AddFlags(...RejexFlag) *RejexBuilder
     RemoveFlags(...RejexFlag) *RejexBuilder
 
     // Utils
-    LineEnding() *RejexBuilder 
+    LineEnding() *RejexBuilder
 }
 
+// PerlFlavorInterface represents regex of the Perl standard syntax
+type PerlFlavorInterface interface {}
+
+// EgrepFlavorInterface represents regex of ERE syntax used by GNU egrep (or with grep -E)
+// type EgrepFlavorInterface interface {}
+// EgrepFlavorInterface represents regex of POSIX ERE syntax used by grep
+// type EgrepPOSIXInterface interface {}
 // type VimFlavorInterface interface {}
-// type GrepFlavorInterface interface {}
