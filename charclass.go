@@ -98,6 +98,13 @@ func (r *RejexBuilder) UnicodeClass(s string) *RejexBuilder {
     return r.appendSegment(characters, segment, unsegment)
 }
 
+// AnyUnicodeGrapheme matches a single Unicode grapheme, whether encoded as a
+// single code point or multiple code points using combining marks. A grapheme
+// most closely resembles the everyday concept of a “character”
+func (r *RejexBuilder) AnyUnicodeGrapheme() *RejexBuilder {
+    return r.appendSegment(characters, "\\X")
+}
+
 // AnyUnicodeLetter matches any single unicode letter
 func (r *RejexBuilder) AnyUnicodeLetter() *RejexBuilder {
     return r.appendSegment(characters, "\\pL", "\\PL")

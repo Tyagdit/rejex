@@ -66,6 +66,8 @@ func createRejexBuilder(flavor RejexFlavor, ignoreErrors []bool) *RejexBuilder {
         r.flags = goFlavorFlags
     case ECMAFlavor:
         r.flags = ecmaFlavorFlags
+    case PerlFlavor:
+        r.flags = perlFlavorFlags
     }
 
     return &r
@@ -79,8 +81,8 @@ func NewRejex(ignoreErrors ...bool) GoFlavorInterface {
 }
 
 // NewRejexFromString creates a new RejexBuilder object used to construct a regex and
-// poppulates it with a provided regex string, this string is not validated to be valid
-// syntax. This uses the golang flavored syntax.
+// populates it with a provided regex string, this string is not validated to be valid
+// syntax. This uses the Go flavored syntax.
 func NewRejexFromString(s string, ignoreErrors ...bool) GoFlavorInterface {
     r := createRejexBuilder(GoFlavor, ignoreErrors)
     r.WriteString(s)
@@ -95,12 +97,28 @@ func NewECMARejex(ignoreErrors ...bool) ECMAFlavorInterface {
 }
 
 // NewECMARejexFromString creates a new RejexBuilder object used to construct a regex and
-// poppulates it with a provided regex string, this string is not validated to be valid
+// populates it with a provided regex string, this string is not validated to be valid
 // syntax. This uses the ECMAScript flavored syntax.
 func NewECMARejexFromString(s string, ignoreErrors ...bool) ECMAFlavorInterface {
     r := createRejexBuilder(ECMAFlavor, ignoreErrors)
     r.WriteString(s)
     return ECMAFlavorInterface(r)
+}
+
+// NewPerlRejex creates a new RejexBuilder object used to construct a regex. This uses
+// the Perl flavored syntax.
+func NewPerlRejex(ignoreErrors ...bool) PerlFlavorInterface {
+    r := createRejexBuilder(GoFlavor, ignoreErrors)
+    return PerlFlavorInterface(r)
+}
+
+// NewPerlRejexFromString creates a new RejexBuilder object used to construct a regex and
+// populates it with a provided regex string, this string is not validated to be valid
+// syntax. This uses the Perl flavored syntax.
+func NewPerlRejexFromString(s string, ignoreErrors ...bool) PerlFlavorInterface {
+    r := createRejexBuilder(GoFlavor, ignoreErrors)
+    r.WriteString(s)
+    return PerlFlavorInterface(r)
 }
 
 // Build constructs the final regex string and returns it along with a list of errors
@@ -134,6 +152,12 @@ func (r *RejexBuilder) Build() (string, []RejexError) {
             builtRejex = flagStr + r.String()
         }
     case ECMAFlavor:
+        flagStr = ""
+        for f, b := range r.flags {
+            if b { flagStr += string(f) }
+        }
+        builtRejex = fmt.Sprintf("/%s/%s", r.String(), flagStr)
+    case PerlFlavor:
         flagStr = ""
         for f, b := range r.flags {
             if b { flagStr += string(f) }
@@ -246,6 +270,13 @@ func (r *RejexBuilder) WordBoundary() *RejexBuilder {
     return r.appendSegment(anchor, "\\b", "\\B")
 }
 
+// EndOfLastMatch matches at the end of the previous match during the second
+// and following match attempts. Matches at the start of the string during the
+// first match attempt
+func (r *RejexBuilder) EndOfLastMatch() *RejexBuilder {
+    return r.appendSegment(anchor, "\\G")
+}
+
 
 // Quantifiers
 
@@ -320,6 +351,20 @@ func (r *RejexBuilder) PreferFewer() *RejexBuilder {
     return r
 }
 
+// PossessiveQuantifier when used after a quantifier (such as OneOrMoreOf or NOf)
+// makes the segment match as many items as possible, without trying any permutations
+// with less matches even if the remainder of the regex fails.
+func (r *RejexBuilder) PossessiveQuantifier() *RejexBuilder {
+    if r.lastSegmentType == quantifier {
+        r.appendSegment(meta, "+")
+    } else {
+        r.addError(
+            "'PossessiveQuantifier()' should only be used after a quantifier",
+        )
+    }
+    return r
+}
+
 // Or represents an alternative between whatever precedes it and whatever follows it.
 // Can be used within a group construct. Can be repeated to provide more than 2 alternatives
 func (r *RejexBuilder) Or() *RejexBuilder {
@@ -344,8 +389,17 @@ func (r *RejexBuilder) EitherOr(s ...string) *RejexBuilder {
 // CapturedPatternByNum matches a previusly captured group with the provided
 // group number
 func (r *RejexBuilder) CapturedPatternByNum(n int) *RejexBuilder {
-    segment := fmt.Sprintf("\\%d", n)
-    return r.appendSegment(meta, segment)
+    if n > 0 && n < 100 {
+        segment := fmt.Sprintf("\\%d", n)
+        r.appendSegment(meta, segment)
+    } else if n < 0 && r.flavor == PerlFlavor {
+        segment := fmt.Sprintf("\\g%d", n)
+        r.appendSegment(meta, segment)
+    } else {
+        r.addError("Pattern number out of bounds")
+    }
+
+    return r
 }
 
 // CapturedPatternByName matches a previusly captured group with the provided
@@ -391,6 +445,22 @@ func (r *RejexBuilder) BeginNonCaptureGroup() *RejexBuilder {
 func (r *RejexBuilder) BeginGroupWithFlags(f []RejexFlag) *RejexBuilder {
     segment := fmt.Sprintf("(?%s:", string(f))
     return r.startNewGroup(segment)
+}
+
+// BeginAtomicGroup represents the start of a new group which prevents the
+// regex engine from backtracking back into the group after a match has been
+// found for the group. If the remainder of the regex fails, the engine may
+// backtrack over the group if a quantifier or alternation makes it optional.
+// But it will not backtrack into the group to try other permutations of the group
+func (r *RejexBuilder) BeginAtomicGroup() *RejexBuilder {
+    return r.startNewGroup("(?>")
+}
+
+// BeginBranchResetGroup represents the start of a new group which if it has
+// multiple alternatives with capturing groups, then the capturing group
+// numbers are the same in all the alternatives
+func (r *RejexBuilder) BeginBranchResetGroup() *RejexBuilder {
+    return r.startNewGroup("(?|")
 }
 
 // BeginPosLookahead represents the start of a new group which only allows the preceding

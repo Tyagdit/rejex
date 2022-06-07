@@ -149,6 +149,7 @@ The supported flavors are:
 
 - Golang
 - ECMAScript
+- Perl
 
 Many flavors of regex have multiple implementations, subflavors and different default options
 which makes it impractical to provide a comprehensive way to generate reliable regexes. This means
